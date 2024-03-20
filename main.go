@@ -11,7 +11,7 @@ import (
 
 const (
 	prgname = "tfe"
-	prgver  = "0.0.1"
+	prgver  = "0.0.2"
 )
 
 func printUsage() {
@@ -78,6 +78,8 @@ func setupClient() {
 		}
 		options.PageNumber = modules.NextPage
 	}
+
+	fmt.Printf("Count = %d\n", len(allModules))
 
 	for _, module := range allModules {
 		fmt.Printf("Module: %s, Provider: %s\n", module.Name, module.Provider)
