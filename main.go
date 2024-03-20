@@ -13,7 +13,7 @@ import (
 
 const (
 	prgname = "tfe"
-	prgver  = "0.1.1"
+	prgver  = "0.2.0"
 )
 
 // Prints usage
@@ -55,7 +55,7 @@ func SetupClient() *tfe.Client {
 	return client
 }
 
-// Lists organizations
+// Lists organizations, with a name filter option
 func ListOrganizations(client *tfe.Client, filter string) {
 	orgs, err := client.Organizations.List(context.Background(), nil)
 	if err != nil {
@@ -72,7 +72,7 @@ func ListOrganizations(client *tfe.Client, filter string) {
 	}
 }
 
-// Lists workspaces
+// Lists workspaces, with a name filter option
 func ListWorkspaces(client *tfe.Client, orgName string, filter string) {
 	workspaces, err := client.Workspaces.List(context.Background(), orgName, &tfe.WorkspaceListOptions{})
 	if err != nil {
@@ -89,7 +89,7 @@ func ListWorkspaces(client *tfe.Client, orgName string, filter string) {
 	}
 }
 
-// Lists registered modules
+// Lists registered modules, with a name filter option
 func ListModules(client *tfe.Client, orgName string, filter string) {
 	options := tfe.RegistryModuleListOptions{
 		ListOptions: tfe.ListOptions{PageSize: 100},
@@ -115,10 +115,9 @@ func ListModules(client *tfe.Client, orgName string, filter string) {
 				for _, v := range m.VersionStatuses {
 					vVer := v.Version
 					vStat := v.Status
-					vErr := v.Error
-					fmt.Printf("%-80s %-6s %-6s %s\n",
+					fmt.Printf("%-80s %-10s %s\n",
 						"localterraform.com/"+m.Namespace+"/"+m.Name+"/"+m.Provider,
-						vVer, vStat, vErr)
+						vVer, vStat)
 				}
 			}
 		}
