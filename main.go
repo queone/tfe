@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	prgname = "azm"
-	prgver  = "2.5.3"
+	prgname = "tfe"
+	prgver  = "0.0.1"
 )
 
 func main() {
