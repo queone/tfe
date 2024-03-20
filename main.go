@@ -24,10 +24,14 @@ func printUsage() {
 
 func setupClient() {
 	// Retrieve API token and organization name from environment variables
+	tfeDomain := os.Getenv("TF_DOMAIN")
 	token := os.Getenv("TF_TOKEN")
 	orgName := os.Getenv("TF_ORG")
 
 	// Check if the environment variables are set
+	if tfeDomain == "" {
+		log.Fatal("TF_DOMAIN is not set.")
+	}
 	if token == "" {
 		log.Fatal("TF_TOKEN is not set.")
 	}
@@ -37,7 +41,8 @@ func setupClient() {
 
 	// Set up a configuration with your API token
 	config := &tfe.Config{
-		Token: token,
+		Token:   token,
+		Address: tfeDomain,
 	}
 
 	// Create a new TFE client
@@ -46,14 +51,36 @@ func setupClient() {
 		log.Fatalf("Error creating TFE client: %v", err)
 	}
 
-	// Use the client to list workspaces in an organization
-	workspaces, err := client.Workspaces.List(context.Background(), orgName, &tfe.WorkspaceListOptions{})
-	if err != nil {
-		log.Fatalf("Error listing workspaces for organization %s: %v", orgName, err)
+	// // Use the client to list workspaces in an organization
+	// workspaces, err := client.Workspaces.List(context.Background(), orgName, &tfe.WorkspaceListOptions{})
+	// if err != nil {
+	// 	log.Fatalf("Error listing workspaces for organization %s: %v", orgName, err)
+	// }
+
+	// for _, ws := range workspaces.Items {
+	// 	fmt.Printf("Workspace: %s\n", ws.Name)
+	// }
+
+	// List all registered modules
+	options := tfe.RegistryModuleListOptions{
+		ListOptions: tfe.ListOptions{PageSize: 100},
+	}
+	var allModules []*tfe.RegistryModule
+
+	for {
+		modules, err := client.RegistryModules.List(context.Background(), orgName, &options)
+		if err != nil {
+			log.Fatalf("Error listing modules for organization %s: %v", orgName, err)
+		}
+		allModules = append(allModules, modules.Items...)
+		if modules.NextPage == 0 {
+			break
+		}
+		options.PageNumber = modules.NextPage
 	}
 
-	for _, ws := range workspaces.Items {
-		fmt.Printf("Workspace: %s\n", ws.Name)
+	for _, module := range allModules {
+		fmt.Printf("Module: %s, Provider: %s\n", module.Name, module.Provider)
 	}
 }
 
