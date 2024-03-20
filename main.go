@@ -13,7 +13,7 @@ import (
 
 const (
 	prgname = "tfe"
-	prgver  = "0.1.0"
+	prgver  = "0.1.1"
 )
 
 // Prints usage
@@ -116,7 +116,7 @@ func ListModules(client *tfe.Client, orgName string, filter string) {
 					vVer := v.Version
 					vStat := v.Status
 					vErr := v.Error
-					fmt.Printf("%-70s %-6s %-6s %s\n",
+					fmt.Printf("%-80s %-6s %-6s %s\n",
 						"localterraform.com/"+m.Namespace+"/"+m.Name+"/"+m.Provider,
 						vVer, vStat, vErr)
 				}
