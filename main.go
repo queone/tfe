@@ -9,6 +9,11 @@ import (
     "github.com/hashicorp/go-tfe"
 )
 
+const (
+	prgname = "azm"
+	prgver  = "2.5.3"
+)
+
 func main() {
     // Retrieve API token and organization name from environment variables
     token := os.Getenv("TF_TOKEN")
