@@ -107,7 +107,9 @@ func ListModules(client *tfe.Client, orgName string, filter string) {
 		}
 		options.PageNumber = modules.NextPage
 	}
-	if len(allModules) > 0 {
+	if len(allModules) == 1 {
+		PrintModuleDetails(client, os.Getenv("TF_ORG"), allModules[0].Name)
+	} else if len(allModules) > 1 {
 		filter = strings.ToLower(filter)
 		for _, m := range allModules {
 			name := strings.ToLower(m.Name)
@@ -122,6 +124,19 @@ func ListModules(client *tfe.Client, orgName string, filter string) {
 			}
 		}
 	}
+}
+
+// Prints details of the module
+func PrintModuleDetails(client *tfe.Client, orgName string, moduleName string) {
+	module, err := client.RegistryModules.Read(context.Background(), orgName, moduleName, "")
+	if err != nil {
+		log.Fatalf("Error retrieving module %s for organization %s: %v", moduleName, orgName, err)
+	}
+	fmt.Printf("Module Name: %s\n", module.Name)
+	fmt.Printf("Module Provider: %s\n", module.Provider)
+	fmt.Printf("Module Version: %s\n", module.Version)
+	fmt.Printf("Module Description: %s\n", module.Description)
+	fmt.Printf("%+v\n", *module)
 }
 
 func main() {
