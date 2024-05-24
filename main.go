@@ -117,15 +117,15 @@ func ListModules(client *tfe.Client, orgName string, filter string, ver string) 
 		filter = strings.ToLower(filter)
 
 		// Map to store the latest version of each module
-		latestVersions := make(map[string]*tfe.RegistryModuleVersionStatus)
+		latestVersions := make(map[string]int)
 
 		// Iterate over all modules and track the latest version
 		for _, m := range allModules {
 			name := strings.ToLower(m.Name)
-			if strings.Contains(name, filter) {
-				for _, v := range m.VersionStatuses {
-					if current, exists := latestVersions[m.Name]; !exists || v.Version > current.Version {
-						latestVersions[m.Name] = v
+			if utl.SubString(name, filter) {
+				for i, v := range m.VersionStatuses {
+					if current, exists := latestVersions[m.Name]; !exists || strings.Compare(v.Version, m.VersionStatuses[current].Version) > 0 {
+						latestVersions[m.Name] = i
 					}
 				}
 			}
@@ -133,11 +133,14 @@ func ListModules(client *tfe.Client, orgName string, filter string, ver string) 
 
 		// Print the latest version of each filtered module
 		for _, m := range allModules {
-			if v, exists := latestVersions[m.Name]; exists {
-				// vVer := v.Version
-				// vStat := v.Status
-				fmt.Printf("%-80s %-10s %s\n",
-					"localterraform.com/"+m.Namespace+"/"+m.Name+"/"+m.Provider, v.Version, v.Status)
+			// if v, exists := latestVersions[m.Name]; exists {
+			// 	vVer := m.VersionStatuses[latestVersions[m.Name]].Version
+			// 	vStat := m.VersionStatuses[latestVersions[m.Name]].Status
+			// 	fmt.Printf("%-80s %-10s %s\n", "localterraform.com/"+m.Namespace+"/"+m.Name+"/"+m.Provider, vVer, vStat)
+			// }
+			if i, exists := latestVersions[m.Name]; exists {
+				v := m.VersionStatuses[i]
+				fmt.Printf("%-80s %-10s %s\n", "localterraform.com/"+m.Namespace+"/"+m.Name+"/"+m.Provider, v.Version, v.Status)
 			}
 		}
 	}
