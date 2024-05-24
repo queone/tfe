@@ -13,7 +13,7 @@ import (
 
 const (
 	prgname = "tfe"
-	prgver  = "0.2.0"
+	prgver  = "0.3.0"
 )
 
 // Prints usage
@@ -22,7 +22,8 @@ func printUsage() {
 		"Terraform Cloud/Enterprise CLI utility. See https://github.com/queone/tfe\n" +
 		"Usage: " + prgname + " [options]\n" +
 		"  -o [filter]              List orgs, filter option\n" +
-		"  -m [filter]              List modules, filter option\n" +
+		"  -m [filter]              List most recent version of modules, filter option\n" +
+		"  -ma [filter]             List all version of modules, filter option\n" +
 		"  -w [filter]              List workspaces, filter option\n" +
 		"  -?, -h, --help           Print this usage page\n")
 	os.Exit(0)
@@ -89,13 +90,14 @@ func ListWorkspaces(client *tfe.Client, orgName string, filter string) {
 	}
 }
 
-// Lists registered modules, with a name filter option
-func ListModules(client *tfe.Client, orgName string, filter string) {
+// Lists registered modules, with a name filter option, which version option
+func ListModules(client *tfe.Client, orgName string, filter string, ver string) {
 	options := tfe.RegistryModuleListOptions{
 		ListOptions: tfe.ListOptions{PageSize: 100},
 	}
 	var allModules []*tfe.RegistryModule
 
+	// Retrieve all modules from the organization
 	for {
 		modules, err := client.RegistryModules.List(context.Background(), orgName, &options)
 		if err != nil {
@@ -107,21 +109,35 @@ func ListModules(client *tfe.Client, orgName string, filter string) {
 		}
 		options.PageNumber = modules.NextPage
 	}
+
 	if len(allModules) == 1 {
 		modID := tfe.NewPrivateRegistryModuleID(orgName, allModules[0].Name, allModules[0].Provider)
 		PrintModuleDetails(client, modID)
 	} else if len(allModules) > 1 {
 		filter = strings.ToLower(filter)
+
+		// Map to store the latest version of each module
+		latestVersions := make(map[string]*tfe.RegistryModuleVersionStatus)
+
+		// Iterate over all modules and track the latest version
 		for _, m := range allModules {
 			name := strings.ToLower(m.Name)
-			if utl.SubString(name, filter) {
+			if strings.Contains(name, filter) {
 				for _, v := range m.VersionStatuses {
-					vVer := v.Version
-					vStat := v.Status
-					fmt.Printf("%-80s %-10s %s\n",
-						"localterraform.com/"+m.Namespace+"/"+m.Name+"/"+m.Provider,
-						vVer, vStat)
+					if current, exists := latestVersions[m.Name]; !exists || v.Version > current.Version {
+						latestVersions[m.Name] = v
+					}
 				}
+			}
+		}
+
+		// Print the latest version of each filtered module
+		for _, m := range allModules {
+			if v, exists := latestVersions[m.Name]; exists {
+				// vVer := v.Version
+				// vStat := v.Status
+				fmt.Printf("%-80s %-10s %s\n",
+					"localterraform.com/"+m.Namespace+"/"+m.Name+"/"+m.Provider, v.Version, v.Status)
 			}
 		}
 	}
@@ -153,21 +169,25 @@ func main() {
 		case "-o":
 			ListOrganizations(client, "")
 		case "-m":
-			ListModules(client, os.Getenv("TF_ORG"), "")
+			ListModules(client, os.Getenv("TF_ORG"), "", "latest")
+		case "-ma":
+			ListModules(client, os.Getenv("TF_ORG"), "", "all")
 		case "-w":
 			ListWorkspaces(client, os.Getenv("TF_ORG"), "")
 		}
 	case 2: // Process 2-argument requests
 		arg1 := os.Args[1]
-		arg2 := os.Args[2]
+		filter := os.Args[2]
 		client := SetupClient()
 		switch arg1 {
 		case "-o":
-			ListOrganizations(client, arg2)
+			ListOrganizations(client, filter)
 		case "-m":
-			ListModules(client, os.Getenv("TF_ORG"), arg2)
+			ListModules(client, os.Getenv("TF_ORG"), filter, "latest")
+		case "-ma":
+			ListModules(client, os.Getenv("TF_ORG"), filter, "all")
 		case "-w":
-			ListWorkspaces(client, os.Getenv("TF_ORG"), arg2)
+			ListWorkspaces(client, os.Getenv("TF_ORG"), filter)
 		}
 	default:
 		printUsage()
