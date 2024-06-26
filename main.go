@@ -13,7 +13,7 @@ import (
 
 const (
 	prgname = "tfe"
-	prgver  = "0.3.0"
+	prgver  = "0.3.1"
 )
 
 // Prints usage
@@ -121,7 +121,7 @@ func ListModules(client *tfe.Client, orgName string, filter string, ver string) 
 			for _, m := range allModules {
 				if utl.SubString(strings.ToLower(m.Name), filter) {
 					for _, v := range m.VersionStatuses {
-						fmt.Printf("%-80s %-10s %s\n", "localterraform.com/"+m.Namespace+"/"+m.Name+"/"+m.Provider, v.Version, v.Status)
+						fmt.Printf("%-80s %-10s %-06s %s\n", "localterraform.com/"+m.Namespace+"/"+m.Name+"/"+m.Provider, v.Version, v.Status, m.UpdatedAt)
 					}
 				}
 			}
@@ -150,7 +150,7 @@ func ListModules(client *tfe.Client, orgName string, filter string, ver string) 
 				// }
 				if i, exists := latestVersions[m.Name]; exists {
 					v := m.VersionStatuses[i]
-					fmt.Printf("%-80s %-10s %s\n", "localterraform.com/"+m.Namespace+"/"+m.Name+"/"+m.Provider, v.Version, v.Status)
+					fmt.Printf("%-80s %-10s %-06s %s\n", "localterraform.com/"+m.Namespace+"/"+m.Name+"/"+m.Provider, v.Version, v.Status, m.UpdatedAt)
 				}
 			}
 		}
