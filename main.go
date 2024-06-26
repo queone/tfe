@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/go-tfe"
 	"github.com/queone/utl"
@@ -13,7 +14,7 @@ import (
 
 const (
 	prgname = "tfe"
-	prgver  = "0.3.1"
+	prgver  = "0.3.2"
 )
 
 // Prints usage
@@ -119,9 +120,13 @@ func ListModules(client *tfe.Client, orgName string, filter string, ver string) 
 		if ver == "all" {
 			// Print all versions of each filtered module
 			for _, m := range allModules {
+				updatedAt, err := time.Parse(time.RFC3339, m.UpdatedAt)
+				if err != nil {
+					log.Fatalf("Error parsing updated timestamp: %v", err)
+				}
 				if utl.SubString(strings.ToLower(m.Name), filter) {
 					for _, v := range m.VersionStatuses {
-						fmt.Printf("%-80s %-10s %-06s %s\n", "localterraform.com/"+m.Namespace+"/"+m.Name+"/"+m.Provider, v.Version, v.Status, m.UpdatedAt)
+						fmt.Printf("%-80s %-10s %-06s %s\n", "localterraform.com/"+m.Namespace+"/"+m.Name+"/"+m.Provider, v.Version, v.Status, updatedAt.Format("2006-01-02 15:04"))
 					}
 				}
 			}
@@ -148,9 +153,13 @@ func ListModules(client *tfe.Client, orgName string, filter string, ver string) 
 				// 	vStat := m.VersionStatuses[latestVersions[m.Name]].Status
 				// 	fmt.Printf("%-80s %-10s %s\n", "localterraform.com/"+m.Namespace+"/"+m.Name+"/"+m.Provider, vVer, vStat)
 				// }
+				updatedAt, err := time.Parse(time.RFC3339, m.UpdatedAt)
+				if err != nil {
+					log.Fatalf("Error parsing updated timestamp: %v", err)
+				}
 				if i, exists := latestVersions[m.Name]; exists {
 					v := m.VersionStatuses[i]
-					fmt.Printf("%-80s %-10s %-06s %s\n", "localterraform.com/"+m.Namespace+"/"+m.Name+"/"+m.Provider, v.Version, v.Status, m.UpdatedAt)
+					fmt.Printf("%-80s %-10s %-06s %s\n", "localterraform.com/"+m.Namespace+"/"+m.Name+"/"+m.Provider, v.Version, v.Status, updatedAt.Format("2006-01-02 15:04"))
 				}
 			}
 		}
