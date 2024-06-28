@@ -14,12 +14,12 @@ import (
 
 const (
 	prgname = "tfe"
-	prgver  = "0.3.6"
+	prgver  = "0.3.7"
 )
 
 // Prints usage
 func printUsage() {
-	empty := "\"Empty. You need to set this up.\""
+	empty := "Empty. You need to set this up."
 	tfToken := os.Getenv("TF_TOKEN")
 	if tfToken == "" {
 		tfToken = empty
@@ -48,9 +48,9 @@ func printUsage() {
 		"    TF_ORG       The TFE Organization name, e.g. 'MY_ORG'\n" +
 		"\n" +
 		"    Current values:\n" +
-		"    TF_TOKEN=" + tfToken + "\n" +
-		"    TF_DOMAIN=" + tfDomain + "\n" +
-		"    TF_ORG=" + tfOrg + "\n" +
+		"    TF_TOKEN=\"" + tfToken + "\"\n" +
+		"    TF_DOMAIN=\"" + tfDomain + "\"\n" +
+		"    TF_ORG=\"" + tfOrg + "\"\n" +
 		"\n" +
 		"  -?, -h, --help           Print this usage page\n")
 	os.Exit(0)
