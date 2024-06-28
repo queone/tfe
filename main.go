@@ -14,12 +14,12 @@ import (
 
 const (
 	prgname = "tfe"
-	prgver  = "0.3.5"
+	prgver  = "0.3.6"
 )
 
 // Prints usage
 func printUsage() {
-	empty := "'Empty. You need to set this up.'"
+	empty := "\"Empty. You need to set this up.\""
 	tfToken := os.Getenv("TF_TOKEN")
 	if tfToken == "" {
 		tfToken = empty
