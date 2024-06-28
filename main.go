@@ -14,7 +14,7 @@ import (
 
 const (
 	prgname = "tfe"
-	prgver  = "0.3.7"
+	prgver  = "0.3.8"
 )
 
 // Prints usage
@@ -24,7 +24,7 @@ func printUsage() {
 	if tfToken == "" {
 		tfToken = empty
 	} else {
-		tfToken = "'_DELIBERATELY_REDACTED_'"
+		tfToken = "__DELIBERATELY_REDACTED__"
 	}
 	tfDomain := os.Getenv("TF_DOMAIN")
 	if tfDomain == "" {
