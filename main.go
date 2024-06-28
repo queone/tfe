@@ -14,23 +14,43 @@ import (
 
 const (
 	prgname = "tfe"
-	prgver  = "0.3.3"
+	prgver  = "0.3.4"
 )
 
 // Prints usage
 func printUsage() {
+	empty := "'Empty. You need to set this up.'"
+	tfToken := os.Getenv("TF_TOKEN")
+	if tfToken == "" {
+		tfToken = empty
+	} else {
+		tfToken = "'_DELIBERATELY_REDACTED_'"
+	}
+	tfDomain := os.Getenv("TF_TOKEN")
+	if tfDomain == "" {
+		tfDomain = empty
+	}
+	tfOrg := os.Getenv("TF_ORG")
+	if tfOrg == "" {
+		tfOrg = empty
+	}
 	fmt.Printf(prgname + " v" + prgver + "\n" +
-		"Terraform Cloud/Enterprise CLI utility. See https://github.com/queone/tfe\n" +
+		"Terraform Enterprise utility. See https://github.com/queone/tfe\n" +
 		"Usage: " + prgname + " [options]\n" +
 		"  -o [filter]              List orgs, filter option\n" +
 		"  -m [filter]              List only latest version of modules, filter option\n" +
 		"  -ma [filter]             List all version of modules, filter option\n" +
 		"  -w [filter]              List workspaces, filter option\n" +
 		"\n" +
-		"  Note: This utility leverages these 3 critical environment variables:\n" +
-		"        TF_TOKEN   A security token to access the respective TFE instance\n" +
-		"        TF_DOMAIN  The TFE domain name, e.g. 'https://tfe.mydomain.com'\n" +
-		"        TF_ORG     The TFE Organization name, e.g. 'MY_ORG'\n" +
+		"  Note: This utility relies on below 3 critical environment variables:\n" +
+		"    TF_TOKEN     A security token to access the respective TFE instance\n" +
+		"    TF_DOMAIN    The TFE domain name, e.g. 'https://tfe.mydomain.com'\n" +
+		"    TF_ORG       The TFE Organization name, e.g. 'MY_ORG'\n" +
+		"\n" +
+		"    Current values:\n" +
+		"    TF_TOKEN=" + tfToken + "\n" +
+		"    TF_DOMAIN=" + tfDomain + "\n" +
+		"    TF_ORG=" + tfOrg + "\n" +
 		"\n" +
 		"  -?, -h, --help           Print this usage page\n")
 	os.Exit(0)
