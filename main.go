@@ -14,7 +14,7 @@ import (
 
 const (
 	prgname = "tfe"
-	prgver  = "0.3.8"
+	prgver  = "0.3.9"
 )
 
 // Prints usage
@@ -41,6 +41,7 @@ func printUsage() {
 		"  -m [filter]              List only latest version of modules, filter option\n" +
 		"  -ma [filter]             List all version of modules, filter option\n" +
 		"  -w [filter]              List workspaces, filter option\n" +
+		"  -?, -h, --help           Print this usage page\n" +
 		"\n" +
 		"  Note: This utility relies on below 3 critical environment variables:\n" +
 		"    TF_TOKEN     A security token to access the respective TFE instance\n" +
@@ -50,9 +51,7 @@ func printUsage() {
 		"    Current values:\n" +
 		"    TF_TOKEN=\"" + tfToken + "\"\n" +
 		"    TF_DOMAIN=\"" + tfDomain + "\"\n" +
-		"    TF_ORG=\"" + tfOrg + "\"\n" +
-		"\n" +
-		"  -?, -h, --help           Print this usage page\n")
+		"    TF_ORG=\"" + tfOrg + "\"\n")
 	os.Exit(0)
 }
 
