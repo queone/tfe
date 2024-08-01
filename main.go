@@ -14,7 +14,7 @@ import (
 
 const (
 	prgname = "tfe"
-	prgver  = "0.3.9"
+	prgver  = "0.4.0"
 )
 
 // Prints usage
@@ -41,6 +41,8 @@ func printUsage() {
 		"  -m [filter]              List only latest version of modules, filter option\n" +
 		"  -ma [filter]             List all version of modules, filter option\n" +
 		"  -w [filter]              List workspaces, filter option\n" +
+		"  -ws WS_NAME              Show workspace details\n" +
+		"  -wc SRC_WS DES_WS        Clone workspace named SRC_WS as DES_WS\n" +
 		"  -?, -h, --help           Print this usage page\n" +
 		"\n" +
 		"  Note: This utility relies on below 3 critical environment variables:\n" +
@@ -48,10 +50,10 @@ func printUsage() {
 		"    TF_DOMAIN    The TFE domain name, e.g. 'https://tfe.mydomain.com'\n" +
 		"    TF_ORG       The TFE Organization name, e.g. 'MY_ORG'\n" +
 		"\n" +
-		"    Current values:\n" +
-		"    TF_TOKEN=\"" + tfToken + "\"\n" +
-		"    TF_DOMAIN=\"" + tfDomain + "\"\n" +
-		"    TF_ORG=\"" + tfOrg + "\"\n")
+		"    Their current values are:\n" +
+		"      TF_TOKEN=\"" + tfToken + "\"\n" +
+		"      TF_DOMAIN=\"" + tfDomain + "\"\n" +
+		"      TF_ORG=\"" + tfOrg + "\"\n")
 	os.Exit(0)
 }
 
@@ -112,6 +114,36 @@ func ListWorkspaces(client *tfe.Client, orgName string, filter string) {
 			if utl.SubString(name, filter) {
 				fmt.Printf("%s\n", ws.Name)
 			}
+		}
+	}
+}
+
+// Shows details of a specific workspace
+func ShowWorkspace(client *tfe.Client, orgName string, wsName string) {
+	workspace, err := client.Workspaces.Read(context.Background(), orgName, wsName)
+	if err != nil {
+		log.Fatalf("Error retrieving workspace %s in organization %s: %v", wsName, orgName, err)
+	}
+
+	fmt.Printf("  Workspace Name: %s\n", workspace.Name)
+	fmt.Printf("  Workspace ID: %s\n", workspace.ID)
+	fmt.Printf("  Created At: %s\n", workspace.CreatedAt)
+	fmt.Printf("  Updated At: %s\n", workspace.UpdatedAt)
+	fmt.Printf("  Description: %s\n", workspace.Description)
+	fmt.Printf("  Terraform Version: %s\n", workspace.TerraformVersion)
+	fmt.Printf("  Auto Apply: %t\n", workspace.AutoApply)
+	fmt.Printf("  Working Directory: %s\n", workspace.WorkingDirectory)
+
+	// Fetch and display environment variables
+	variables, err := client.Variables.List(context.Background(), workspace.ID, &tfe.VariableListOptions{})
+	if err != nil {
+		log.Fatalf("Error retrieving variables for workspace %s: %v", wsName, err)
+	}
+
+	fmt.Println("  Environment Variables:")
+	for _, variable := range variables.Items {
+		if variable.Category == tfe.CategoryEnv {
+			fmt.Printf("    Key: %s, Value: %s, Sensitive: %t\n", variable.Key, variable.Value, variable.Sensitive)
 		}
 	}
 }
@@ -236,6 +268,8 @@ func main() {
 			ListModules(client, os.Getenv("TF_ORG"), filter, "all")
 		case "-w":
 			ListWorkspaces(client, os.Getenv("TF_ORG"), filter)
+		case "-ws":
+			ShowWorkspace(client, os.Getenv("TF_ORG"), filter)
 		}
 	default:
 		printUsage()
