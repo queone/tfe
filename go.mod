@@ -3,6 +3,7 @@ module tfe
 go 1.22.0
 
 require (
+	github.com/git719/utl v1.3.5
 	github.com/hashicorp/go-tfe v1.47.1
 	github.com/queone/utl v1.0.0
 )

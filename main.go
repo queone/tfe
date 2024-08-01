@@ -1,23 +1,18 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"os"
-	"strings"
-	"time"
 
 	"github.com/hashicorp/go-tfe"
-	"github.com/queone/utl"
 )
 
 const (
 	prgname = "tfe"
-	prgver  = "0.4.3"
+	prgver  = "0.4.5"
 )
 
-// Prints usage
 func printUsage() {
 	empty := "Empty. You need to set this up."
 	tfToken := os.Getenv("TF_TOKEN")
@@ -42,7 +37,7 @@ func printUsage() {
 		"  -ma [filter]             List all version of modules, filter option\n" +
 		"  -w [filter]              List workspaces, filter option\n" +
 		"  -ws WS_NAME              Show workspace details\n" +
-		"  -wc SRC_WS DES_WS        Clone workspace named SRC_WS as DES_WS\n" +
+		"  -wc WS_SRC WS_DES        Clone workspace named WS_SRC as WS_DES\n" +
 		"  -?, -h, --help           Print this usage page\n" +
 		"\n" +
 		"  Note: This utility relies on below 3 critical environment variables:\n" +
@@ -57,7 +52,6 @@ func printUsage() {
 	os.Exit(0)
 }
 
-// Sets up the client
 func SetupClient() *tfe.Client {
 	// Retrieve API token and organization name from environment variables
 	tfeDomain := os.Getenv("TF_DOMAIN")
@@ -84,169 +78,10 @@ func SetupClient() *tfe.Client {
 	return client
 }
 
-// Lists organizations, with a name filter option
-func ListOrganizations(client *tfe.Client, filter string) {
-	orgs, err := client.Organizations.List(context.Background(), nil)
-	if err != nil {
-		log.Fatalf("Error listing organization: %v", err)
-	}
-	if orgs.Items != nil && len(orgs.Items) > 0 {
-		filter = strings.ToLower(filter)
-		for _, o := range orgs.Items {
-			name := strings.ToLower(o.Name)
-			if utl.SubString(name, filter) {
-				fmt.Printf("%s\n", o.Name)
-			}
-		}
-	}
-}
-
-// Lists workspaces, with a name filter option
-func ListWorkspaces(client *tfe.Client, orgName string, filter string) {
-	workspaces, err := client.Workspaces.List(context.Background(), orgName, &tfe.WorkspaceListOptions{})
-	if err != nil {
-		log.Fatalf("Error listing workspaces for organization %s: %v", orgName, err)
-	}
-	if workspaces.Items != nil && len(workspaces.Items) > 0 {
-		filter = strings.ToLower(filter)
-		for _, ws := range workspaces.Items {
-			name := strings.ToLower(ws.Name)
-			if utl.SubString(name, filter) {
-				fmt.Printf("%s\n", ws.Name)
-			}
-		}
-	}
-}
-
-// Shows details of a specific workspace
-func ShowWorkspace(client *tfe.Client, orgName string, wsName string) {
-	workspace, err := client.Workspaces.Read(context.Background(), orgName, wsName)
-	if err != nil {
-		log.Fatalf("Error retrieving workspace %s in organization %s: %v", wsName, orgName, err)
-	}
-
-	colon := utl.Whi(":")
-
-	desc := workspace.Description
-	if desc == "" {
-		desc = `""`
-	}
-	workingDir := workspace.WorkingDirectory
-	if workingDir == "" {
-		workingDir = `""`
-	}
-
-	fmt.Printf("%s%s %s\n", utl.Blu("workspace_name"), colon, utl.Gre(workspace.Name))
-	fmt.Printf("%s%s %s\n", utl.Blu("workspace_id"), colon, utl.Gre(workspace.ID))
-	fmt.Printf("%s%s %s\n", utl.Blu("created_at"), colon, utl.Gre(workspace.CreatedAt.Format("2006-01-02 15:04")))
-	fmt.Printf("%s%s %s\n", utl.Blu("updated_at"), colon, utl.Gre(workspace.UpdatedAt.Format("2006-01-02 15:04")))
-	fmt.Printf("%s%s %s\n", utl.Blu("description"), colon, utl.Gre(desc))
-	fmt.Printf("%s%s %s\n", utl.Blu("terraform_version"), colon, utl.Gre(workspace.TerraformVersion))
-	fmt.Printf("%s%s %s\n", utl.Blu("auto_apply"), colon, utl.Gre(workspace.AutoApply))
-	fmt.Printf("%s%s %s\n", utl.Blu("working_directory"), colon, utl.Gre(workingDir))
-
-	// Fetch and display environment variables
-	variables, err := client.Variables.List(context.Background(), workspace.ID, &tfe.VariableListOptions{})
-	if err != nil {
-		log.Fatalf("Error retrieving variables for workspace %s: %v", wsName, err)
-	}
-
-	fmt.Println(utl.Blu("variables") + colon)
-	for _, variable := range variables.Items {
-		if variable.Category == tfe.CategoryEnv {
-			fmt.Printf("%s%s %s\n", utl.Blu(variable.Key), colon, utl.Gre(variable.Value))
-		}
-	}
-}
-
-// Lists registered modules, with a name filter option, which version option
-func ListModules(client *tfe.Client, orgName string, filter string, ver string) {
-	options := tfe.RegistryModuleListOptions{
-		ListOptions: tfe.ListOptions{PageSize: 100},
-	}
-	var allModules []*tfe.RegistryModule
-
-	// Retrieve all modules from the organization
-	for {
-		modules, err := client.RegistryModules.List(context.Background(), orgName, &options)
-		if err != nil {
-			log.Fatalf("Error listing modules for organization %s: %v", orgName, err)
-		}
-		allModules = append(allModules, modules.Items...)
-		if modules.NextPage == 0 {
-			break
-		}
-		options.PageNumber = modules.NextPage
-	}
-
-	if len(allModules) == 1 {
-		modID := tfe.NewPrivateRegistryModuleID(orgName, allModules[0].Name, allModules[0].Provider)
-		PrintModuleDetails(client, modID)
-	} else if len(allModules) > 1 {
-		filter = strings.ToLower(filter)
-
-		if ver == "all" {
-			// Print all versions of each filtered module
-			for _, m := range allModules {
-				updatedAt, err := time.Parse(time.RFC3339, m.UpdatedAt)
-				if err != nil {
-					log.Fatalf("Error parsing updated timestamp: %v", err)
-				}
-				if utl.SubString(strings.ToLower(m.Name), filter) {
-					for _, v := range m.VersionStatuses {
-						fmt.Printf("%-80s %-10s %-06s %s\n", "localterraform.com/"+m.Namespace+"/"+m.Name+"/"+m.Provider, v.Version, v.Status, updatedAt.Format("2006-01-02 15:04"))
-					}
-				}
-			}
-		} else {
-			// Map to store the latest version of each module
-			latestVersions := make(map[string]int)
-
-			// Iterate over all modules and track the latest version
-			for _, m := range allModules {
-				name := strings.ToLower(m.Name)
-				if utl.SubString(name, filter) {
-					for i, v := range m.VersionStatuses {
-						if current, exists := latestVersions[m.Name]; !exists || strings.Compare(v.Version, m.VersionStatuses[current].Version) > 0 {
-							latestVersions[m.Name] = i
-						}
-					}
-				}
-			}
-
-			// Print the latest version of each filtered module
-			for _, m := range allModules {
-				// if v, exists := latestVersions[m.Name]; exists {
-				// 	vVer := m.VersionStatuses[latestVersions[m.Name]].Version
-				// 	vStat := m.VersionStatuses[latestVersions[m.Name]].Status
-				// 	fmt.Printf("%-80s %-10s %s\n", "localterraform.com/"+m.Namespace+"/"+m.Name+"/"+m.Provider, vVer, vStat)
-				// }
-				updatedAt, err := time.Parse(time.RFC3339, m.UpdatedAt)
-				if err != nil {
-					log.Fatalf("Error parsing updated timestamp: %v", err)
-				}
-				if i, exists := latestVersions[m.Name]; exists {
-					v := m.VersionStatuses[i]
-					fmt.Printf("%-80s %-10s %-06s %s\n", "localterraform.com/"+m.Namespace+"/"+m.Name+"/"+m.Provider, v.Version, v.Status, updatedAt.Format("2006-01-02 15:04"))
-				}
-			}
-		}
-	}
-}
-
-// Prints details of the module
-func PrintModuleDetails(client *tfe.Client, modID tfe.RegistryModuleID) {
-	module, err := client.RegistryModules.Read(context.Background(), modID)
-	if err != nil {
-		log.Fatalf("Error retrieving module with ID %v: %v", modID, err)
-	}
-	fmt.Printf("%+v\n", *module)
-}
-
 func main() {
 	numberOfArguments := len(os.Args[1:]) // Not including the program itself
-	if numberOfArguments < 1 || numberOfArguments > 2 {
-		printUsage() // Don't accept less than 1 or more than 2 arguments
+	if numberOfArguments < 1 || numberOfArguments > 3 {
+		printUsage() // Don't accept less than 1 or more than 3 arguments
 	}
 	switch numberOfArguments {
 	case 1: // Process 1-argument requests
@@ -281,6 +116,15 @@ func main() {
 			ListWorkspaces(client, os.Getenv("TF_ORG"), filter)
 		case "-ws":
 			ShowWorkspace(client, os.Getenv("TF_ORG"), filter)
+		}
+	case 3: // Process 2-argument requests
+		arg1 := os.Args[1]
+		arg2 := os.Args[2]
+		arg3 := os.Args[3]
+		client := SetupClient()
+		switch arg1 {
+		case "-wc":
+			CloneWorkspace(client, os.Getenv("TF_ORG"), arg2, arg3)
 		}
 	default:
 		printUsage()
