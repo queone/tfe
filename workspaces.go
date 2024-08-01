@@ -54,6 +54,19 @@ func ShowWorkspace(client *tfe.Client, orgName string, wsName string) {
 	fmt.Printf("%s%s %s\n", utl.Blu("auto_apply"), colon, utl.Gre(workspace.AutoApply))
 	fmt.Printf("%s%s %s\n", utl.Blu("working_directory"), colon, utl.Gre(workingDir))
 
+	// Display Execution Mode
+	fmt.Printf("%s%s %s\n", utl.Blu("execution_mode"), colon, utl.Gre(workspace.ExecutionMode))
+
+	// Attempt to display Agent Pool ID if Execution Mode is "agent"
+	if workspace.ExecutionMode == "agent" {
+		// If the AgentPoolID field is not available directly, skip this part
+		if workspace.AgentPool != nil {
+			fmt.Printf("%s%s %s\n", utl.Blu("agent_pool_id"), colon, utl.Gre(*workspace.AgentPool))
+		} else {
+			fmt.Printf("%s%s %s\n", utl.Blu("agent_pool_id"), colon, utl.Gre("Not available"))
+		}
+	}
+
 	// Fetch and display environment variables
 	variables, err := client.Variables.List(context.Background(), workspace.ID, &tfe.VariableListOptions{})
 	if err != nil {
