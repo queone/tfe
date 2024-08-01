@@ -10,7 +10,7 @@ import (
 
 const (
 	prgname = "tfe"
-	prgver  = "0.4.9"
+	prgver  = "1.0.0"
 )
 
 func printUsage() {
