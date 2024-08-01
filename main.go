@@ -14,7 +14,7 @@ import (
 
 const (
 	prgname = "tfe"
-	prgver  = "0.4.0"
+	prgver  = "0.4.1"
 )
 
 // Prints usage
@@ -125,14 +125,14 @@ func ShowWorkspace(client *tfe.Client, orgName string, wsName string) {
 		log.Fatalf("Error retrieving workspace %s in organization %s: %v", wsName, orgName, err)
 	}
 
-	fmt.Printf("  Workspace Name: %s\n", workspace.Name)
-	fmt.Printf("  Workspace ID: %s\n", workspace.ID)
-	fmt.Printf("  Created At: %s\n", workspace.CreatedAt)
-	fmt.Printf("  Updated At: %s\n", workspace.UpdatedAt)
-	fmt.Printf("  Description: %s\n", workspace.Description)
-	fmt.Printf("  Terraform Version: %s\n", workspace.TerraformVersion)
-	fmt.Printf("  Auto Apply: %t\n", workspace.AutoApply)
-	fmt.Printf("  Working Directory: %s\n", workspace.WorkingDirectory)
+	fmt.Printf("  Workspace Name     %s\n", workspace.Name)
+	fmt.Printf("  Workspace ID       %s\n", workspace.ID)
+	fmt.Printf("  Created At         %s\n", workspace.CreatedAt.Format("2006-01-02 15:04"))
+	fmt.Printf("  Updated At         %s\n", workspace.UpdatedAt.Format("2006-01-02 15:04"))
+	fmt.Printf("  Description        %s\n", workspace.Description)
+	fmt.Printf("  Terraform Version  %s\n", workspace.TerraformVersion)
+	fmt.Printf("  Auto Apply         %t\n", workspace.AutoApply)
+	fmt.Printf("  Working Directory  %s\n", workspace.WorkingDirectory)
 
 	// Fetch and display environment variables
 	variables, err := client.Variables.List(context.Background(), workspace.ID, &tfe.VariableListOptions{})
@@ -140,10 +140,10 @@ func ShowWorkspace(client *tfe.Client, orgName string, wsName string) {
 		log.Fatalf("Error retrieving variables for workspace %s: %v", wsName, err)
 	}
 
-	fmt.Println("  Environment Variables:")
+	fmt.Println("  VARIABLES")
 	for _, variable := range variables.Items {
 		if variable.Category == tfe.CategoryEnv {
-			fmt.Printf("    Key: %s, Value: %s, Sensitive: %t\n", variable.Key, variable.Value, variable.Sensitive)
+			fmt.Printf("  %-34s  %s\n", variable.Key, variable.Value)
 		}
 	}
 }
