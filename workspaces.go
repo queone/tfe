@@ -102,6 +102,12 @@ func CloneWorkspace(client *tfe.Client, orgName, srcWsName, destWsName string) {
 		TerraformVersion: tfe.String(srcWorkspace.TerraformVersion),
 		WorkingDirectory: tfe.String(srcWorkspace.WorkingDirectory),
 		Description:      tfe.String(srcWorkspace.Description),
+		ExecutionMode:    tfe.String(srcWorkspace.ExecutionMode),
+	}
+
+	// If the source workspace uses an agent pool, set the AgentPoolID for the new workspace
+	if srcWorkspace.ExecutionMode == "agent" && srcWorkspace.AgentPool != nil {
+		options.AgentPoolID = tfe.String(srcWorkspace.AgentPool.ID)
 	}
 
 	destWorkspace, err := client.Workspaces.Create(context.Background(), orgName, options)
