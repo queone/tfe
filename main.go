@@ -14,7 +14,7 @@ import (
 
 const (
 	prgname = "tfe"
-	prgver  = "0.4.2"
+	prgver  = "0.4.3"
 )
 
 // Prints usage
@@ -127,14 +127,23 @@ func ShowWorkspace(client *tfe.Client, orgName string, wsName string) {
 
 	colon := utl.Whi(":")
 
+	desc := workspace.Description
+	if desc == "" {
+		desc = `""`
+	}
+	workingDir := workspace.WorkingDirectory
+	if workingDir == "" {
+		workingDir = `""`
+	}
+
 	fmt.Printf("%s%s %s\n", utl.Blu("workspace_name"), colon, utl.Gre(workspace.Name))
 	fmt.Printf("%s%s %s\n", utl.Blu("workspace_id"), colon, utl.Gre(workspace.ID))
 	fmt.Printf("%s%s %s\n", utl.Blu("created_at"), colon, utl.Gre(workspace.CreatedAt.Format("2006-01-02 15:04")))
 	fmt.Printf("%s%s %s\n", utl.Blu("updated_at"), colon, utl.Gre(workspace.UpdatedAt.Format("2006-01-02 15:04")))
-	fmt.Printf("%s%s %s\n", utl.Blu("description"), colon, utl.Gre(workspace.Description))
+	fmt.Printf("%s%s %s\n", utl.Blu("description"), colon, utl.Gre(desc))
 	fmt.Printf("%s%s %s\n", utl.Blu("terraform_version"), colon, utl.Gre(workspace.TerraformVersion))
 	fmt.Printf("%s%s %s\n", utl.Blu("auto_apply"), colon, utl.Gre(workspace.AutoApply))
-	fmt.Printf("%s%s %s\n", utl.Blu("working_directory"), colon, utl.Gre(workspace.WorkingDirectory))
+	fmt.Printf("%s%s %s\n", utl.Blu("working_directory"), colon, utl.Gre(workingDir))
 
 	// Fetch and display environment variables
 	variables, err := client.Variables.List(context.Background(), workspace.ID, &tfe.VariableListOptions{})
@@ -142,7 +151,7 @@ func ShowWorkspace(client *tfe.Client, orgName string, wsName string) {
 		log.Fatalf("Error retrieving variables for workspace %s: %v", wsName, err)
 	}
 
-	fmt.Println("variables:")
+	fmt.Println(utl.Blu("variables") + colon)
 	for _, variable := range variables.Items {
 		if variable.Category == tfe.CategoryEnv {
 			fmt.Printf("%s%s %s\n", utl.Blu(variable.Key), colon, utl.Gre(variable.Value))
