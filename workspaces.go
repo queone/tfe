@@ -59,11 +59,16 @@ func ShowWorkspace(client *tfe.Client, orgName string, wsName string) {
 
 	// Attempt to display Agent Pool ID if Execution Mode is "agent"
 	if workspace.ExecutionMode == "agent" {
-		// If the AgentPoolID field is not available directly, skip this part
 		if workspace.AgentPool != nil {
-			fmt.Printf("%s%s %s\n", utl.Blu("agent_pool_id"), colon, utl.Gre(*workspace.AgentPool))
+			// Assuming AgentPoolID is the correct field to access the ID string
+			agentPoolID := workspace.AgentPool.ID
+			agentPool, err := client.AgentPools.Read(context.Background(), agentPoolID)
+			if err != nil {
+				log.Fatalf("Error retrieving agent pool %s: %v", agentPoolID, err)
+			}
+			fmt.Printf("  %s%s %s\n", utl.Blu("agent_pool_name"), colon, utl.Gre(agentPool.Name))
 		} else {
-			fmt.Printf("%s%s %s\n", utl.Blu("agent_pool_id"), colon, utl.Gre("Not available"))
+			fmt.Printf("  %s%s %s\n", utl.Blu("agent_pool_id"), colon, utl.Gre("Not available"))
 		}
 	}
 
