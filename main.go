@@ -10,7 +10,7 @@ import (
 
 const (
 	prgname = "tfe"
-	prgver  = "1.0.0"
+	prgver  = "1.0.1"
 )
 
 func printUsage() {
@@ -35,20 +35,20 @@ func printUsage() {
 		"  -o [filter]              List orgs, filter option\n" +
 		"  -m [filter]              List only latest version of modules, filter option\n" +
 		"  -ma [filter]             List all version of modules, filter option\n" +
-		"  -w [filter]              List workspaces, filter option\n" +
+		"  -w [filter]              List workspaces (100 limit), filter option\n" +
 		"  -ws WS_NAME              Show workspace details\n" +
 		"  -wc WS_SRC WS_DES        Clone workspace named WS_SRC as WS_DES\n" +
 		"  -?, -h, --help           Print this usage page\n" +
 		"\n" +
 		"  Note: This utility relies on below 3 critical environment variables:\n" +
 		"    TF_TOKEN     A security token to access the respective TFE instance\n" +
-		"    TF_DOMAIN    The TFE domain name, e.g. 'https://tfe.mydomain.com'\n" +
-		"    TF_ORG       The TFE Organization name, e.g. 'MY_ORG'\n" +
+		"    TF_DOMAIN    The TFE domain name (https://tfe.mydomain.com, etc)\n" +
+		"    TF_ORG       The TFE Organization name (MY_ORG, etc)\n" +
 		"\n" +
-		"    Their current values are:\n" +
-		"      TF_TOKEN=\"" + tfToken + "\"\n" +
-		"      TF_DOMAIN=\"" + tfDomain + "\"\n" +
-		"      TF_ORG=\"" + tfOrg + "\"\n")
+		"  Current values:\n" +
+		"    TF_TOKEN=\"" + tfToken + "\"\n" +
+		"    TF_DOMAIN=\"" + tfDomain + "\"\n" +
+		"    TF_ORG=\"" + tfOrg + "\"\n")
 	os.Exit(0)
 }
 

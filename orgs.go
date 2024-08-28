@@ -16,7 +16,7 @@ func ListOrganizations(client *tfe.Client, filter string) {
 	if err != nil {
 		log.Fatalf("Error listing organization: %v", err)
 	}
-	if orgs.Items != nil && len(orgs.Items) > 0 {
+	if len(orgs.Items) > 0 {
 		filter = strings.ToLower(filter)
 		for _, o := range orgs.Items {
 			name := strings.ToLower(o.Name)

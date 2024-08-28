@@ -11,18 +11,40 @@ import (
 )
 
 func ListWorkspaces(client *tfe.Client, orgName string, filter string) {
-	// Lists workspaces, with a name filter option
-	workspaces, err := client.Workspaces.List(context.Background(), orgName, &tfe.WorkspaceListOptions{})
-	if err != nil {
-		log.Fatalf("Error listing workspaces for organization %s: %v", orgName, err)
+	var allWorkspaces []*tfe.Workspace
+
+	options := tfe.WorkspaceListOptions{
+		ListOptions: tfe.ListOptions{
+			PageSize: 100, // Set the page size to a reasonable number
+		},
 	}
-	if workspaces.Items != nil && len(workspaces.Items) > 0 {
-		filter = strings.ToLower(filter)
-		for _, ws := range workspaces.Items {
-			name := strings.ToLower(ws.Name)
-			if utl.SubString(name, filter) {
-				fmt.Printf("%s\n", ws.Name)
-			}
+
+	// Retrieve all workspaces from the organization
+	for {
+		// Lists workspaces
+		workspaces, err := client.Workspaces.List(context.Background(), orgName, &options)
+		if err != nil {
+			log.Fatalf("Error listing workspaces for organization %s: %v", orgName, err)
+		}
+
+		// Append the retrieved workspaces to the allWorkspaces slice
+		allWorkspaces = append(allWorkspaces, workspaces.Items...)
+
+		// Break the loop if there are no more pages
+		if workspaces.Pagination.NextPage == 0 {
+			break
+		}
+
+		// Set the next page for the next request
+		options.PageNumber = workspaces.Pagination.NextPage
+	}
+
+	// Process the retrieved workspaces
+	filter = strings.ToLower(filter)
+	for _, ws := range allWorkspaces {
+		name := strings.ToLower(ws.Name)
+		if strings.Contains(name, filter) { // Assuming `utl.SubString` checks for substring
+			fmt.Printf("%s\n", ws.Name)
 		}
 	}
 }
