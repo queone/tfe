@@ -94,16 +94,42 @@ func ShowWorkspace(client *tfe.Client, orgName string, wsName string) {
 		}
 	}
 
-	// Fetch and display environment variables
+	// Fetch and display environment variables and terraform variables
 	variables, err := client.Variables.List(context.Background(), workspace.ID, &tfe.VariableListOptions{})
 	if err != nil {
 		log.Fatalf("Error retrieving variables for workspace %s: %v", wsName, err)
 	}
 
-	fmt.Println(utl.Blu("variables") + colon)
+	// Initialize flags to check if there are any variables in each category
+	hasEnvVars := false
+	hasTerraformVars := false
+
+	// First pass to check for variables in each category
 	for _, variable := range variables.Items {
 		if variable.Category == tfe.CategoryEnv {
-			fmt.Printf("  %s%s %s\n", utl.Blu(variable.Key), colon, utl.Gre(variable.Value))
+			hasEnvVars = true
+		} else if variable.Category == tfe.CategoryTerraform {
+			hasTerraformVars = true
+		}
+	}
+
+	// Print environment variables if they exist
+	if hasEnvVars {
+		fmt.Println("  environment:")
+		for _, variable := range variables.Items {
+			if variable.Category == tfe.CategoryEnv {
+				fmt.Printf("    %s: %s\n", utl.Blu(variable.Key), utl.Gre(variable.Value))
+			}
+		}
+	}
+
+	// Print terraform variables if they exist
+	if hasTerraformVars {
+		fmt.Println("  terraform:")
+		for _, variable := range variables.Items {
+			if variable.Category == tfe.CategoryTerraform {
+				fmt.Printf("    %s: %s\n", utl.Blu(variable.Key), utl.Gre(variable.Value))
+			}
 		}
 	}
 }
