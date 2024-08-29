@@ -99,6 +99,7 @@ func ShowWorkspace(client *tfe.Client, orgName string, wsName string) {
 	if err != nil {
 		log.Fatalf("Error retrieving variables for workspace %s: %v", wsName, err)
 	}
+	fmt.Printf("%s%s\n", utl.Blu("variables"), colon)
 
 	// Initialize flags to check if there are any variables in each category
 	hasEnvVars := false
@@ -115,7 +116,7 @@ func ShowWorkspace(client *tfe.Client, orgName string, wsName string) {
 
 	// Print environment variables if they exist
 	if hasEnvVars {
-		fmt.Println("  environment:")
+		fmt.Printf("  %s%s\n", utl.Blu("environment"), colon)
 		for _, variable := range variables.Items {
 			if variable.Category == tfe.CategoryEnv {
 				fmt.Printf("    %s: %s\n", utl.Blu(variable.Key), utl.Gre(variable.Value))
@@ -125,7 +126,7 @@ func ShowWorkspace(client *tfe.Client, orgName string, wsName string) {
 
 	// Print terraform variables if they exist
 	if hasTerraformVars {
-		fmt.Println("  terraform:")
+		fmt.Printf("  %s%s\n", utl.Blu("terraform"), colon)
 		for _, variable := range variables.Items {
 			if variable.Category == tfe.CategoryTerraform {
 				fmt.Printf("    %s: %s\n", utl.Blu(variable.Key), utl.Gre(variable.Value))
