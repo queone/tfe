@@ -40,27 +40,40 @@ func ListModules(client *tfe.Client, orgName string, filter string, ver string) 
 		if ver == "all" {
 			// Print all versions of each filtered module
 			for _, m := range allModules {
-				updatedAt, err := time.Parse(time.RFC3339, m.UpdatedAt)
+				// Fetch module versions
+				versions, err := client.RegistryModuleVersions.List(context.Background(), tfe.NewPrivateRegistryModuleID(orgName, m.Name, m.Provider), nil)
 				if err != nil {
-					log.Fatalf("Error parsing updated timestamp: %v", err)
+					log.Fatalf("Error listing module versions for module %s: %v", m.Name, err)
 				}
-				if utl.SubString(strings.ToLower(m.Name), filter) {
-					for _, v := range m.VersionStatuses {
+
+				// Print each version with its `UpdatedAt` timestamp
+				for _, v := range versions.Items {
+					updatedAt, err := time.Parse(time.RFC3339, v.UpdatedAt)
+					if err != nil {
+						log.Fatalf("Error parsing updated timestamp: %v", err)
+					}
+					if utl.SubString(strings.ToLower(m.Name), filter) {
 						fmt.Printf("%-80s %-10s %-06s %s\n", "localterraform.com/"+m.Namespace+"/"+m.Name+"/"+m.Provider, v.Version, v.Status, updatedAt.Format("2006-01-02 15:04"))
 					}
 				}
 			}
 		} else {
 			// Map to store the latest version of each module
-			latestVersions := make(map[string]int)
+			latestVersions := make(map[string]*tfe.RegistryModuleVersion)
 
-			// Iterate over all modules and track the latest version
+			// Iterate over all modules and fetch versions
 			for _, m := range allModules {
 				name := strings.ToLower(m.Name)
 				if utl.SubString(name, filter) {
-					for i, v := range m.VersionStatuses {
-						if current, exists := latestVersions[m.Name]; !exists || strings.Compare(v.Version, m.VersionStatuses[current].Version) > 0 {
-							latestVersions[m.Name] = i
+					versions, err := client.RegistryModuleVersions.List(context.Background(), tfe.NewPrivateRegistryModuleID(orgName, m.Name, m.Provider), nil)
+					if err != nil {
+						log.Fatalf("Error listing module versions for module %s: %v", m.Name, err)
+					}
+
+					// Track the latest version
+					for _, v := range versions.Items {
+						if current, exists := latestVersions[m.Name]; !exists || strings.Compare(v.Version, current.Version) > 0 {
+							latestVersions[m.Name] = v
 						}
 					}
 				}
@@ -68,17 +81,11 @@ func ListModules(client *tfe.Client, orgName string, filter string, ver string) 
 
 			// Print the latest version of each filtered module
 			for _, m := range allModules {
-				// if v, exists := latestVersions[m.Name]; exists {
-				// 	vVer := m.VersionStatuses[latestVersions[m.Name]].Version
-				// 	vStat := m.VersionStatuses[latestVersions[m.Name]].Status
-				// 	fmt.Printf("%-80s %-10s %s\n", "localterraform.com/"+m.Namespace+"/"+m.Name+"/"+m.Provider, vVer, vStat)
-				// }
-				updatedAt, err := time.Parse(time.RFC3339, m.UpdatedAt)
-				if err != nil {
-					log.Fatalf("Error parsing updated timestamp: %v", err)
-				}
-				if i, exists := latestVersions[m.Name]; exists {
-					v := m.VersionStatuses[i]
+				if v, exists := latestVersions[m.Name]; exists {
+					updatedAt, err := time.Parse(time.RFC3339, v.UpdatedAt)
+					if err != nil {
+						log.Fatalf("Error parsing updated timestamp: %v", err)
+					}
 					fmt.Printf("%-80s %-10s %-06s %s\n", "localterraform.com/"+m.Namespace+"/"+m.Name+"/"+m.Provider, v.Version, v.Status, updatedAt.Format("2006-01-02 15:04"))
 				}
 			}

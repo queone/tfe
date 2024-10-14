@@ -10,7 +10,7 @@ import (
 
 const (
 	prgname = "tfe"
-	prgver  = "1.0.3"
+	prgver  = "1.0.4"
 )
 
 func printUsage() {
@@ -30,7 +30,7 @@ func printUsage() {
 		tfOrg = empty
 	}
 	fmt.Printf(prgname + " v" + prgver + "\n" +
-		"Terraform Enterprise utility. See https://github.com/queone/tfe\n" +
+		"Terraform Enterprise utility - https://github.com/queone/tfe\n" +
 		"Usage: " + prgname + " [options]\n" +
 		"  -o [filter]              List orgs, filter option\n" +
 		"  -m [filter]              List only latest version of modules, filter option\n" +
