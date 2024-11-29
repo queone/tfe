@@ -6,8 +6,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/git719/utl"
 	"github.com/hashicorp/go-tfe"
+	"github.com/queone/utl"
 )
 
 func ListWorkspaces(client *tfe.Client, orgName string, filter string) {
