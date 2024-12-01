@@ -6,11 +6,11 @@ import (
 	"log"
 	"strings"
 
-	"github.com/git719/utl"
 	"github.com/hashicorp/go-tfe"
+	"github.com/queone/utl"
 )
 
-func ListWorkspaces(client *tfe.Client, orgName string, filter string) {
+func ListWorkspaces(client *tfe.Client, tfOrg string, filter string) {
 	var allWorkspaces []*tfe.Workspace
 
 	options := tfe.WorkspaceListOptions{
@@ -22,9 +22,9 @@ func ListWorkspaces(client *tfe.Client, orgName string, filter string) {
 	// Retrieve all workspaces from the organization
 	for {
 		// Lists workspaces
-		workspaces, err := client.Workspaces.List(context.Background(), orgName, &options)
+		workspaces, err := client.Workspaces.List(context.Background(), tfOrg, &options)
 		if err != nil {
-			log.Fatalf("Error listing workspaces for organization %s: %v", orgName, err)
+			log.Fatalf("Error listing workspaces for organization %s: %v", tfOrg, err)
 		}
 
 		// Append the retrieved workspaces to the allWorkspaces slice
@@ -49,14 +49,12 @@ func ListWorkspaces(client *tfe.Client, orgName string, filter string) {
 	}
 }
 
-func ShowWorkspace(client *tfe.Client, orgName string, wsName string) {
+func ShowWorkspace(client *tfe.Client, tfOrg string, wsName string) {
 	// Shows details of a specific workspace
-	workspace, err := client.Workspaces.Read(context.Background(), orgName, wsName)
+	workspace, err := client.Workspaces.Read(context.Background(), tfOrg, wsName)
 	if err != nil {
-		log.Fatalf("Error retrieving workspace %s in organization %s: %v", wsName, orgName, err)
+		log.Fatalf("Error retrieving workspace %s in organization %s: %v", wsName, tfOrg, err)
 	}
-
-	colon := utl.Whi(":")
 
 	desc := workspace.Description
 	if desc == "" {
@@ -67,17 +65,18 @@ func ShowWorkspace(client *tfe.Client, orgName string, wsName string) {
 		workingDir = `""`
 	}
 
-	fmt.Printf("%s%s %s\n", utl.Blu("workspace_name"), colon, utl.Gre(workspace.Name))
-	fmt.Printf("%s%s %s\n", utl.Blu("workspace_id"), colon, utl.Gre(workspace.ID))
-	fmt.Printf("%s%s %s\n", utl.Blu("created_at"), colon, utl.Gre(workspace.CreatedAt.Format("2006-01-02 15:04")))
-	fmt.Printf("%s%s %s\n", utl.Blu("updated_at"), colon, utl.Gre(workspace.UpdatedAt.Format("2006-01-02 15:04")))
-	fmt.Printf("%s%s %s\n", utl.Blu("description"), colon, utl.Gre(desc))
-	fmt.Printf("%s%s %s\n", utl.Blu("terraform_version"), colon, utl.Gre(workspace.TerraformVersion))
-	fmt.Printf("%s%s %s\n", utl.Blu("auto_apply"), colon, utl.Gre(workspace.AutoApply))
-	fmt.Printf("%s%s %s\n", utl.Blu("working_directory"), colon, utl.Gre(workingDir))
+	fmt.Printf("%s\n", utl.Gra("# Terraform Cloud Workspace"))
+	fmt.Printf("%s: %s\n", utl.Blu("workspace_name"), utl.Gre(workspace.Name))
+	fmt.Printf("%s: %s\n", utl.Blu("workspace_id"), utl.Gre(workspace.ID))
+	fmt.Printf("%s: %s\n", utl.Blu("created_at"), utl.Gre(workspace.CreatedAt.Format("2006-Jan-02 15:04")))
+	fmt.Printf("%s: %s\n", utl.Blu("updated_at"), utl.Gre(workspace.UpdatedAt.Format("2006-Jan-02 15:04")))
+	fmt.Printf("%s: %s\n", utl.Blu("description"), utl.Gre(desc))
+	fmt.Printf("%s: %s\n", utl.Blu("terraform_version"), utl.Gre(workspace.TerraformVersion))
+	fmt.Printf("%s: %s\n", utl.Blu("auto_apply"), utl.Gre(workspace.AutoApply))
+	fmt.Printf("%s: %s\n", utl.Blu("working_directory"), utl.Gre(workingDir))
 
 	// Display Execution Mode
-	fmt.Printf("%s%s %s\n", utl.Blu("execution_mode"), colon, utl.Gre(workspace.ExecutionMode))
+	fmt.Printf("%s: %s\n", utl.Blu("execution_mode"), utl.Gre(workspace.ExecutionMode))
 
 	// Attempt to display Agent Pool ID if Execution Mode is "agent"
 	if workspace.ExecutionMode == "agent" {
@@ -88,9 +87,9 @@ func ShowWorkspace(client *tfe.Client, orgName string, wsName string) {
 			if err != nil {
 				log.Fatalf("Error retrieving agent pool %s: %v", agentPoolID, err)
 			}
-			fmt.Printf("  %s%s %s\n", utl.Blu("agent_pool_name"), colon, utl.Gre(agentPool.Name))
+			fmt.Printf("  %s: %s\n", utl.Blu("agent_pool_name"), utl.Gre(agentPool.Name))
 		} else {
-			fmt.Printf("  %s%s %s\n", utl.Blu("agent_pool_id"), colon, utl.Gre("Not available"))
+			fmt.Printf("  %s: %s\n", utl.Blu("agent_pool_id"), utl.Gre("Not available"))
 		}
 	}
 
@@ -99,7 +98,7 @@ func ShowWorkspace(client *tfe.Client, orgName string, wsName string) {
 	if err != nil {
 		log.Fatalf("Error retrieving variables for workspace %s: %v", wsName, err)
 	}
-	fmt.Printf("%s%s\n", utl.Blu("variables"), colon)
+	fmt.Printf("%s:\n", utl.Blu("variables"))
 
 	// Initialize flags to check if there are any variables in each category
 	hasEnvVars := false
@@ -116,7 +115,7 @@ func ShowWorkspace(client *tfe.Client, orgName string, wsName string) {
 
 	// Print environment variables if they exist
 	if hasEnvVars {
-		fmt.Printf("  %s%s\n", utl.Blu("environment"), colon)
+		fmt.Printf("  %s:\n", utl.Blu("environment"))
 		for _, variable := range variables.Items {
 			if variable.Category == tfe.CategoryEnv {
 				fmt.Printf("    %s: %s\n", utl.Blu(variable.Key), utl.Gre(variable.Value))
@@ -126,7 +125,7 @@ func ShowWorkspace(client *tfe.Client, orgName string, wsName string) {
 
 	// Print terraform variables if they exist
 	if hasTerraformVars {
-		fmt.Printf("  %s%s\n", utl.Blu("terraform"), colon)
+		fmt.Printf("  %s:\n", utl.Blu("terraform"))
 		for _, variable := range variables.Items {
 			if variable.Category == tfe.CategoryTerraform {
 				fmt.Printf("    %s: %s\n", utl.Blu(variable.Key), utl.Gre(variable.Value))
@@ -135,13 +134,13 @@ func ShowWorkspace(client *tfe.Client, orgName string, wsName string) {
 	}
 }
 
-func CloneWorkspace(client *tfe.Client, orgName, srcWsName, destWsName string) {
+func CloneWorkspace(client *tfe.Client, tfOrg, srcWsName, destWsName string) {
 	// Clones a workspace from WS_SRC to WS_DES, including variables
 
 	// Get source workspace details
-	srcWorkspace, err := client.Workspaces.Read(context.Background(), orgName, srcWsName)
+	srcWorkspace, err := client.Workspaces.Read(context.Background(), tfOrg, srcWsName)
 	if err != nil {
-		log.Fatalf("Error retrieving source workspace %s in organization %s: %v", srcWsName, orgName, err)
+		log.Fatalf("Error retrieving source workspace %s in organization %s: %v", srcWsName, tfOrg, err)
 	}
 
 	// Create new workspace with the same attributes as the source, but with a new name
@@ -159,7 +158,7 @@ func CloneWorkspace(client *tfe.Client, orgName, srcWsName, destWsName string) {
 		options.AgentPoolID = tfe.String(srcWorkspace.AgentPool.ID)
 	}
 
-	destWorkspace, err := client.Workspaces.Create(context.Background(), orgName, options)
+	destWorkspace, err := client.Workspaces.Create(context.Background(), tfOrg, options)
 	if err != nil {
 		log.Fatalf("Error creating destination workspace %s: %v", utl.Gre(destWsName), err)
 	}
