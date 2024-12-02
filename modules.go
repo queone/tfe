@@ -25,6 +25,7 @@ func GetModuleVersion(client *tfe.Client, tfOrg string, mod *tfe.RegistryModule,
 	moduleID := GetRegistryModuleID(tfOrg, mod)
 	ver, err := client.RegistryModules.ReadVersion(context.Background(), moduleID, verStr)
 	if err != nil {
+		// utl.PrintJsonColor(moduleID) // DEBUG
 		//log.Fatalf("Error fetching module %s version %s: %v", mod.Name, verStr, err)
 		return nil
 	}
@@ -73,7 +74,7 @@ func ListModules(client *tfe.Client, tfOrg string, filter string, qualifier stri
 			for _, mod := range matchingModules {
 				modNamespace := "localterraform.com/" + mod.Namespace + "/" + mod.Name + "/" + mod.Provider
 				for _, v := range mod.VersionStatuses {
-					updated_at := "<unknown>"
+					updated_at := "<updated_at?>"
 					ver := GetModuleVersion(client, tfOrg, mod, v.Version)
 					if ver != nil {
 						updatedAt, _ := time.Parse(time.RFC3339, ver.UpdatedAt)
@@ -101,7 +102,7 @@ func ListModules(client *tfe.Client, tfOrg string, filter string, qualifier stri
 				modNamespace := "localterraform.com/" + mod.Namespace + "/" + mod.Name + "/" + mod.Provider
 				if i, exists := latestVersions[mod.Name]; exists {
 					v := mod.VersionStatuses[i]
-					updated_at := "<unknown>"
+					updated_at := "<updated_at?>"
 					ver := GetModuleVersion(client, tfOrg, mod, v.Version)
 					if ver != nil {
 						updatedAt, _ := time.Parse(time.RFC3339, ver.UpdatedAt)
@@ -142,8 +143,8 @@ func PrintSingleModuleDetails(client *tfe.Client, tfOrg string, mod *tfe.Registr
 		if len(mod.VersionStatuses) > 0 {
 			fmt.Printf("%s:\n", utl.Blu("versions"))
 			for _, v := range mod.VersionStatuses {
-				created_at := "<unknown>"
-				updated_at := "<unknown>"
+				created_at := "<created_at?>"
+				updated_at := "<updated_at?>"
 				ver := GetModuleVersion(client, tfOrg, mod, v.Version)
 				//utl.PrintJsonColor(ver) // DEBUG
 				if ver != nil {
