@@ -62,9 +62,9 @@ func ListModules(client *tfe.Client, tfOrg string, filter string, qualifier stri
 
 	if len(matchingModules) == 1 {
 		if qualifier == "json" {
-			PrintSingleModuleDetails(client, matchingModules[0], true)
+			PrintSingleModuleDetails(client, tfOrg, matchingModules[0], true)
 		} else {
-			PrintSingleModuleDetails(client, matchingModules[0], false)
+			PrintSingleModuleDetails(client, tfOrg, matchingModules[0], false)
 		}
 	} else if len(matchingModules) > 1 {
 		if qualifier == "all" {
@@ -107,7 +107,7 @@ func ListModules(client *tfe.Client, tfOrg string, filter string, qualifier stri
 	}
 }
 
-func PrintSingleModuleDetails(client *tfe.Client, mod *tfe.RegistryModule, json bool) {
+func PrintSingleModuleDetails(client *tfe.Client, tfOrg string, mod *tfe.RegistryModule, json bool) {
 	// Print all details related to this one specific module.
 	// The tfe.Client arg will be used to print other details in the future.
 	if json {
@@ -135,7 +135,13 @@ func PrintSingleModuleDetails(client *tfe.Client, mod *tfe.RegistryModule, json 
 		if len(mod.VersionStatuses) > 0 {
 			fmt.Printf("%s:\n", utl.Blu("versions"))
 			for _, v := range mod.VersionStatuses {
-				fmt.Printf("  %-8s %-3s %s\n", v.Version, v.Status, v.Error)
+				ver := GetModuleVersion(client, tfOrg, mod, v.Version)
+				//utl.PrintJsonColor(ver) // DEBUG
+				createdAt, _ := time.Parse(time.RFC3339, ver.CreatedAt)
+				created_As := createdAt.Format("2006-Jan-02 15:04")
+				updatedAt, _ := time.Parse(time.RFC3339, ver.UpdatedAt)
+				updated_at := updatedAt.Format("2006-Jan-02 15:04")
+				fmt.Printf("  %-26s %-8s %-20s %s\n", ver.ID, v.Version, created_As, updated_at)
 			}
 
 		}
