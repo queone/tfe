@@ -25,7 +25,8 @@ func GetModuleVersion(client *tfe.Client, tfOrg string, mod *tfe.RegistryModule,
 	moduleID := GetRegistryModuleID(tfOrg, mod)
 	ver, err := client.RegistryModules.ReadVersion(context.Background(), moduleID, verStr)
 	if err != nil {
-		log.Fatalf("Error fetching module %s version %s: %v", mod.Name, verStr, err)
+		//log.Fatalf("Error fetching module %s version %s: %v", mod.Name, verStr, err)
+		return nil
 	}
 	return ver
 }
@@ -72,9 +73,12 @@ func ListModules(client *tfe.Client, tfOrg string, filter string, qualifier stri
 			for _, mod := range matchingModules {
 				modNamespace := "localterraform.com/" + mod.Namespace + "/" + mod.Name + "/" + mod.Provider
 				for _, v := range mod.VersionStatuses {
+					updated_at := "<unknown>"
 					ver := GetModuleVersion(client, tfOrg, mod, v.Version)
-					updatedAt, _ := time.Parse(time.RFC3339, ver.UpdatedAt)
-					updated_at := updatedAt.Format("2006-Jan-02 15:04")
+					if ver != nil {
+						updatedAt, _ := time.Parse(time.RFC3339, ver.UpdatedAt)
+						updated_at = updatedAt.Format("2006-Jan-02 15:04")
+					}
 					fmt.Printf("%-80s %-10s %s\n", modNamespace, v.Version, updated_at)
 				}
 			}
@@ -97,9 +101,12 @@ func ListModules(client *tfe.Client, tfOrg string, filter string, qualifier stri
 				modNamespace := "localterraform.com/" + mod.Namespace + "/" + mod.Name + "/" + mod.Provider
 				if i, exists := latestVersions[mod.Name]; exists {
 					v := mod.VersionStatuses[i]
+					updated_at := "<unknown>"
 					ver := GetModuleVersion(client, tfOrg, mod, v.Version)
-					updatedAt, _ := time.Parse(time.RFC3339, ver.UpdatedAt)
-					updated_at := updatedAt.Format("2006-Jan-02 15:04")
+					if ver != nil {
+						updatedAt, _ := time.Parse(time.RFC3339, ver.UpdatedAt)
+						updated_at = updatedAt.Format("2006-Jan-02 15:04")
+					}
 					fmt.Printf("%-80s %-10s %s\n", modNamespace, v.Version, updated_at)
 				}
 			}
@@ -135,13 +142,17 @@ func PrintSingleModuleDetails(client *tfe.Client, tfOrg string, mod *tfe.Registr
 		if len(mod.VersionStatuses) > 0 {
 			fmt.Printf("%s:\n", utl.Blu("versions"))
 			for _, v := range mod.VersionStatuses {
+				created_at := "<unknown>"
+				updated_at := "<unknown>"
 				ver := GetModuleVersion(client, tfOrg, mod, v.Version)
 				//utl.PrintJsonColor(ver) // DEBUG
-				createdAt, _ := time.Parse(time.RFC3339, ver.CreatedAt)
-				created_As := createdAt.Format("2006-Jan-02 15:04")
-				updatedAt, _ := time.Parse(time.RFC3339, ver.UpdatedAt)
-				updated_at := updatedAt.Format("2006-Jan-02 15:04")
-				fmt.Printf("  %-26s %-8s %-20s %s\n", ver.ID, v.Version, created_As, updated_at)
+				if ver != nil {
+					createdAt, _ := time.Parse(time.RFC3339, ver.CreatedAt)
+					created_at = createdAt.Format("2006-Jan-02 15:04")
+					updatedAt, _ := time.Parse(time.RFC3339, ver.UpdatedAt)
+					updated_at = updatedAt.Format("2006-Jan-02 15:04")
+				}
+				fmt.Printf("  %-26s %-8s %-20s %s\n", ver.ID, v.Version, created_at, updated_at)
 			}
 
 		}
