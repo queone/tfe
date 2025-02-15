@@ -2,6 +2,22 @@
 
 Terraform Cloud CLI utility
 
+### Why?
+
+Just a simple utility that allows:
+
+- **Useful Functionalities**: Quickly viewing workspaces and modules registered in a particular TFE or Terraform Cloud instance. Also allows **cloning** workspaces, which is usually not possible via the Web UI.
+- **Cross-Platform**: Easily compile on Linux, Mac, or Windows.
+- **Simplicity**: Covers 99% of typical use cases with a minimal feature set.
+- **Learning Opportunity**: A great way to practice coding in Go.
+
+### Getting Started
+
+To compile, clone this repository and run:
+```bash
+./build_go
+```
+
 ### Usage
 
 ```bash

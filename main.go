@@ -18,8 +18,8 @@ func printUsage() {
 	v := program_version
 	cfgFile := utl.Yel("~/." + program_name + "/config.yaml")
 	usage := fmt.Sprintf("%s v%s\n"+
-		"Terraform Cloud CLI utility\n"+
-		"=======================\n"+
+		"Terraform Cloud CLI utility — https://github.com/queone/tfe\n"+
+		"===========================\n"+
 		"%s\n"+
 		"  %s [options] [arguments]\n"+
 		"\n"+
