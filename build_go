@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# runner 1.2.0
+# Run scripts hosted remotely, executing the latest version locally
+
+set -euo pipefail  # Exit immediately on error
+
+# Set up a temp directory, to be deleted at exit
+TempDir=$(mktemp -d); trap 'rm -rf "${TempDir}"' EXIT
+
+# Download and execute the remote script. Note that the name of
+# this local runner script determines the remote script to fetch
+Script="$(basename $0)"
+curl -kso "${TempDir}/${Script}" "https://que.one/scripts/${Script}"
+chmod +x "${TempDir}/${Script}"
+"${TempDir}/${Script}" "$@"
+exit 0

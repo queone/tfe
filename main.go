@@ -2,87 +2,68 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 
-	"github.com/hashicorp/go-tfe"
+	"github.com/queone/utl"
 )
 
 const (
-	prgname = "tfe"
-	prgver  = "1.1.3"
+	program_name    = "tfe"
+	program_version = "1.1.4"
+	config_file     = "config.yaml"
 )
 
 func printUsage() {
-	empty := "Empty. You need to set this up."
-	tfOrg := os.Getenv("TF_ORG")
-	tfDomain := os.Getenv("TF_DOMAIN")
-	tfToken := os.Getenv("TF_TOKEN")
-	if tfOrg == "" {
-		tfOrg = empty
-	}
-	if tfDomain == "" {
-		tfDomain = empty
-	}
-	if tfToken == "" {
-		tfToken = empty
-	} else {
-		tfToken = "__DELIBERATELY_REDACTED__"
-	}
-	fmt.Printf(prgname + " v" + prgver + "\n" +
-		"Terraform cloud utility - https://github.com/queone/tfe\n" +
-		"Usage: " + prgname + " [options]\n" +
-		"  -o [filter]              List orgs, filter option\n" +
-		"  -m[j] [filter]           List only latest version of modules, filter option; JSON option\n" +
-		"  -ma [filter]             List all version of modules, filter option\n" +
-		"  -w [filter]              List workspaces (100 limit), filter option\n" +
-		"  -ws NAME                 Show workspace details\n" +
-		"  -wc SRC DES              Clone workspace named SRC as DES\n" +
-		"  -?, -h, --help           Print this usage page\n" +
-		"\n" +
-		"  Note: This utility relies on below 3 critical environment variables:\n" +
-		"    TF_ORG       TFE Organization name (MYORG, etc)\n" +
-		"    TF_DOMAIN    TFE domain name (https://app.terraform.io, etc)\n" +
-		"    TF_TOKEN     Security token to access the respective TFE instance\n" +
-		"\n" +
-		"  Current values:\n" +
-		"    TF_ORG=\"" + tfOrg + "\"\n" +
-		"    TF_DOMAIN=\"" + tfDomain + "\"\n" +
-		"    TF_TOKEN=\"" + tfToken + "\"\n")
+	n := utl.Yel(program_name)
+	v := program_version
+	cfgFile := utl.Yel("~/." + program_name + "/config.yaml")
+	usage := fmt.Sprintf("%s v%s\n"+
+		"Terraform Cloud CLI utility\n"+
+		"=======================\n"+
+		"%s\n"+
+		"  %s [options] [arguments]\n"+
+		"\n"+
+		"%s\n"+
+		"  This utility provides basic functionality for interacting with a "+
+		"Terraform Enterprise or TF Cloud account instance.\n"+
+		"\n"+
+		"%s\n"+
+		"  You can authenticate using one of two methods:\n"+
+		"  1. Set the following environment variables:\n"+
+		"     • TF_ORG=<value>     TFE Organization name (e.g. MYORG)\n"+
+		"     • TF_DOMAIN=<value>  TFE domain name (e.g. https://app.terraform.io)\n"+
+		"     • TF_TOKEN=<value>   Security token to access the TFE instance\n"+
+		"  2. Create a YAML configuration file at %s with those variables:\n"+
+		"     • TF_ORG:    <value>\n"+
+		"     • TF_DOMAIN: <value>\n"+
+		"     • TF_TOKEN:  <value>\n"+
+		"\n"+
+		"%s\n"+
+		"  The following options are available:\n"+
+		"  -o [filter]       List organizations; filter option\n"+
+		"  -m[j] [filter]    List only latest version of modules; filter option; JSON option\n"+
+		"  -ma [filter]      List all versions of modules; filter option\n"+
+		"  -w [filter]       List workspaces (100 limit); filter option\n"+
+		"  -ws NAME          Show workspace details\n"+
+		"  -wc SRC DEST      Clone workspace named SRC as a new workspace named DEST\n"+
+		"  -?, -h, --help    Show this help message and exit\n"+
+		"\n"+
+		"%s\n"+
+		"  %s -o myorg\n"+
+		"  %s -m mymodule\n"+
+		"  %s -ws myworkspace\n"+
+		"  %s -wc source_ws_name new_ws_name\n"+
+		"  %s -h\n",
+		n, v, utl.Yel("Usage"), n, utl.Yel("Overview"), utl.Yel("Authentication"), cfgFile, utl.Yel("Options"), utl.Yel("Examples"), n, n, n, n, n)
+	fmt.Print(usage)
 	os.Exit(0)
 }
 
-func SetupClient(tfOrg, tfDomain, tfToken string) *tfe.Client {
-	// Check if essential environment variables are valid
-	if tfToken == "" || tfOrg == "" || tfDomain == "" {
-		log.Fatal("One or more required environment variables (TF_TOKEN, TF_ORG, TF_DOMAIN) are not set.")
-	}
-
-	// Set up a configuration with the API token
-	config := &tfe.Config{
-		Token:   tfToken,
-		Address: tfDomain,
-	}
-
-	// Create a new TFE client
-	client, err := tfe.NewClient(config)
-	if err != nil {
-		log.Fatalf("Error creating TFE client: %v", err)
-	}
-
-	return client
-}
-
 func main() {
-	numberOfArguments := len(os.Args[1:]) // Not including the program itself
+	numberOfArguments := len(os.Args[1:]) // Don't include the program itself
 	if numberOfArguments < 1 || numberOfArguments > 3 {
 		printUsage() // Don't accept less than 1 or more than 3 arguments
 	}
-
-	// Retrieve the 3 essential environment variables
-	tfOrg := os.Getenv("TF_ORG")
-	tfDomain := os.Getenv("TF_DOMAIN")
-	tfToken := os.Getenv("TF_TOKEN")
 
 	switch numberOfArguments {
 	case 1: // Process 1-argument requests
@@ -91,7 +72,7 @@ func main() {
 		case "-?", "-h", "--help":
 			printUsage()
 		}
-		client := SetupClient(tfOrg, tfDomain, tfToken)
+		client, tfOrg := setupClient()
 		switch arg1 {
 		case "-o":
 			ListOrganizations(client, "")
@@ -107,7 +88,7 @@ func main() {
 	case 2: // Process 2-argument requests
 		arg1 := os.Args[1]
 		filter := os.Args[2]
-		client := SetupClient(tfOrg, tfDomain, tfToken)
+		client, tfOrg := setupClient()
 		switch arg1 {
 		case "-o":
 			ListOrganizations(client, filter)
@@ -126,7 +107,7 @@ func main() {
 		arg1 := os.Args[1]
 		arg2 := os.Args[2]
 		arg3 := os.Args[3]
-		client := SetupClient(tfOrg, tfDomain, tfToken)
+		client, tfOrg := setupClient()
 		switch arg1 {
 		case "-wc":
 			CloneWorkspace(client, tfOrg, arg2, arg3)
