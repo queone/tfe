@@ -9,17 +9,16 @@ import (
 
 const (
 	program_name    = "tfe"
-	program_version = "1.1.4"
+	program_version = "1.1.5"
 	config_file     = "config.yaml"
 )
 
 func printUsage() {
-	n := utl.Yel(program_name)
+	n := utl.Whi2(program_name)
 	v := program_version
 	cfgFile := utl.Yel("~/." + program_name + "/config.yaml")
 	usage := fmt.Sprintf("%s v%s\n"+
 		"Terraform Cloud CLI utility — https://github.com/queone/tfe\n"+
-		"===========================\n"+
 		"%s\n"+
 		"  %s [options] [arguments]\n"+
 		"\n"+
@@ -54,7 +53,7 @@ func printUsage() {
 		"  %s -ws myworkspace\n"+
 		"  %s -wc source_ws_name new_ws_name\n"+
 		"  %s -h\n",
-		n, v, utl.Yel("Usage"), n, utl.Yel("Overview"), utl.Yel("Authentication"), cfgFile, utl.Yel("Options"), utl.Yel("Examples"), n, n, n, n, n)
+		n, v, utl.Whi2("Usage"), n, utl.Whi2("Overview"), utl.Whi2("Authentication"), cfgFile, utl.Whi2("Options"), utl.Whi2("Examples"), n, n, n, n, n)
 	fmt.Print(usage)
 	os.Exit(0)
 }
