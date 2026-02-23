@@ -9,7 +9,7 @@ import (
 
 const (
 	program_name    = "tfe"
-	program_version = "1.2.0"
+	program_version = "1.2.1"
 	config_file     = "config.yaml"
 )
 
