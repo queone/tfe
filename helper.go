@@ -49,7 +49,7 @@ func getLoginCredentials() (tfOrg, tfDomain, tfToken string, err error) {
 		"Checking config file credentials...\n")
 
 	// Set up configuration directory path, and create if it doesn't exist
-	confDir := filepath.Join(os.Getenv("HOME"), "."+program_name)
+	confDir := filepath.Join(os.Getenv("HOME"), ".config", program_name)
 	if utl.FileNotExist(confDir) {
 		if err := os.Mkdir(confDir, 0700); err != nil {
 			return "", "", "", fmt.Errorf("config directory %s does not exist — error trying "+
@@ -81,7 +81,7 @@ func getLoginCredentials() (tfOrg, tfDomain, tfToken string, err error) {
 	if err != nil {
 		return "", "", "", fmt.Errorf("error reading YAML config file: %w", err)
 	}
-	creds := credsRaw.(map[string]interface{})
+	creds := credsRaw.(map[string]any)
 	tfOrg = utl.Str(creds["TF_ORG"])
 	tfDomain = utl.Str(creds["TF_DOMAIN"])
 	tfToken = utl.Str(creds["TF_TOKEN"])

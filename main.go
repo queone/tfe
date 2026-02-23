@@ -9,14 +9,14 @@ import (
 
 const (
 	program_name    = "tfe"
-	program_version = "1.1.5"
+	program_version = "1.2.0"
 	config_file     = "config.yaml"
 )
 
 func printUsage() {
 	n := utl.Whi2(program_name)
 	v := program_version
-	cfgFile := utl.Yel("~/." + program_name + "/config.yaml")
+	cfgFile := utl.Yel("~/.config/" + program_name + "/config.yaml")
 	usage := fmt.Sprintf("%s v%s\n"+
 		"Terraform Cloud CLI utility — https://github.com/queone/tfe\n"+
 		"%s\n"+
