@@ -59,7 +59,7 @@ An earlier standalone `queone/tfe` depended on the `queone/utl` library; both we
 Install the latest release:
 
 ```bash
-go install github.com/queone/tfe/cmd/tfe@latest
+go install github.com/queone/tfe/v2/cmd/tfe@latest
 ```
 
 Or clone this repository and run `./build.sh`, which tests, builds, and installs `tfe`.

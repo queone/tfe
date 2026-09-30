@@ -1,4 +1,4 @@
-module github.com/queone/tfe
+module github.com/queone/tfe/v2
 
 go 1.26.4
 

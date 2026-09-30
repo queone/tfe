@@ -16,7 +16,7 @@ import (
 
 const (
 	programName    = "tfe"
-	programVersion = "2.2.0"
+	programVersion = "2.3.0"
 )
 
 // env carries the streams, the environment, the config path, and the client
